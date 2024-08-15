@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vòng Quay Cao Cấp</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(to right, #00b09b, #96c93d);
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .wheel-wrapper {
+            position: relative;
+            width: 300px;
+            height: 80px;
+            overflow: hidden;
+            border: 3px solid #333;
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .wheel {
+            width: 300px;
+            height: auto;
+            display: flex;
+            flex-direction: column;
+            transition: transform 4s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+            transform-origin: top;
+            will-change: transform;
+        }
+
+        .wheel-item {
+            height: 80px;
+            line-height: 80px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+            font-size: 18px;
+            background: #f9f9f9;
+            padding: 0 10px;
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            margin-top: 20px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        button:hover {
+            background-color: #555;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-content h2 {
+            margin: 0 0 15px;
+            font-size: 24px;
+            color: #333;
+        }
+
+        .modal-content p {
+            font-size: 20px;
+            margin: 0 0 25px;
+            color: #666;
+        }
+
+        .modal-content button {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .modal-content button:hover {
+            background-color: #555;
+        }
+
+        .history {
+            margin-top: 20px;
+            text-align: left;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fff;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history h3 {
+            margin: 0 0 10px;
+            font-size: 20px;
+        }
+
+        .history ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .history li {
+            font-size: 16px;
+            border-bottom: 1px solid #ddd;
+            padding: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="wheel-wrapper">
+            <div class="wheel" id="wheel">
+                <!-- Các giải thưởng sẽ được thêm vào đây -->
+            </div>
+        </div>
+        <button onclick="spinWheel()">Quay Vòng</button>
+        <div class="history" id="history">
+            <h3>Lịch Sử Phần Thưởng</h3>
+            <ul id="history-list">
+                <!-- Lịch sử phần thưởng sẽ được thêm vào đây -->
+            </ul>
+        </div>
+    </div>
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h2>Chúc mừng!</h2>
+            <p id="modal-message"></p>
+            <button onclick="closeModal()">Đóng</button>
+        </div>
+    </div>
+    <script>
+        const prizes = [
+            'Triêụ Vân KSTT SĐ', 'Nak TNVT SĐ', 'YeNa HCT SĐ', 'But PCT SĐ', 'Allain TSSK SĐ',
+            'Veres Kimono SĐ', 'Bijan HKCG SĐ', 'Nak LQS SĐ', 'Elsu TTPH SĐ', 'Nata NHYH SĐ',
+            'Allain Kirito SĐ', 'But Stacia SĐ', 'Zuka MH SĐ', 'Nak BDCT SĐ', 'Violet TNVT SĐ',
+            'Mu TTTB SĐ', 'Flo GSTH SĐ', 'Zephys SV SĐ', 'Bright Toshiro SĐ', 'Yan Tanjiro SĐ',
+            'Mu Zenitsu SĐ', 'Flo Seven SĐ', 'Ryoma Samurai HT SĐ', 'Mu Kuchiki SĐ', 'Lubu CTLT SĐ',
+            'Raz Muay Thái SĐ', 'Ilum KHTH SĐ', 'Hayate TTVT SĐ', 'Val ĐNTT SĐ', 'Raz Bảo Vũ SĐ',
+            'Zata S-Dreamer SĐ', 'Airi TNVT SĐ', 'Quillen NTLD SĐ', 'Bijan KTLK SĐ', 'Tulen Chí Tôn SĐ',
+            'Veres Lưu Ly SĐ', 'Zata Tà Phượng SĐ', 'WuKong TGXD SĐ', 'Nak Killua SĐ', 'Lili Wave SĐ',
+            'Tulen Thần Sứ SĐ', 'Ryoma Ultraman SĐ', 'Flo Thần Long SĐ', 'Errol Genos SĐ', 'Laville Xạ Thần SĐ',
+            'Keera Nezuko SĐ', 'Mina LXYV SĐ', 'Arduin BVCG SĐ', 'Mu Chí Tôn SĐ', 'Paine TXBT SĐ',
+            'Lau Miêu Ảnh SĐ', 'Ryoma Maple Frost SĐ', 'WuKong Tề Thiên SĐ', 'Cresht Bách Tướng SĐ', 'Fennik PTTX SĐ',
+            'Enzo STBH SĐ', 'Elsu Tận Thế SĐ', 'Tel Yêu Hồ SĐ', 'Omen Tận Thế SĐ', 'Cap Kimono SĐ',
+            'EnZo Kurapika SĐ', 'Yena Wave SĐ', 'Điêu Thuyền Wave SĐ', 'Zill Tu La SĐ', 'Ilum Thiên Ngư SĐ',
+            'Hayate Dạ Ưng SĐ', 'Nak Siêu Việt SĐ', 'LuBu Ichigo SĐ', 'Vio Tỷ Tỷ SĐ', 'Yorn LTS SĐ',
+            'Veera A.I Love You SĐ', 'Gildur Xích Long SĐ', 'Charlotte Hexsword SĐ', 'Cap Harley Quinn SĐ', 'Sephera BNNL SĐ',
+            'Aoi Mafia SĐ', 'Sinestrea Wave SĐ', 'Aya Cầu Vồng SĐ', 'Erin Cổ Tích SĐ', 'Điêu Thuyền Thất Tịch SĐ',
+            'Yue Hoả Diệm SĐ', 'Aoi Dạ Ưng SĐ', 'Lavi Moba', 'Dirak Trăg Khuyết SĐ', 'Lili Thần Long SĐ',
+            'Omen Huyết Ảnh SĐ', 'Astrid Thần Trí Tuệ SĐ', 'Elsu Chu Tước SĐ', 'Rouie Thanh Long SĐ', 'Elando\'rr Tuxedo SĐ',
+            'Xeniel Tận Thế SĐ', 'Nata Phú Quý SĐ', 'Maloch Dạ Ưng SĐ', 'But Kim Ngư SĐ', 'Alice Quân Nhạc SĐ',
+            'Krixi Tatsumaki SĐ', 'Val Xạ Thần SĐ', 'Lili Anh Đào SĐ', 'Rourke Bách Tướng SĐ', 'Mất Lượt 🌚'
+        ];
+
+        const wheel = document.getElementById('wheel');
+        const historyList = document.getElementById('history-list');
+        let lastRotation = 0;
+        let history = [];
+
+        function populateWheel() {
+            wheel.innerHTML = '';
+            prizes.forEach(prize => {
+                const item = document.createElement('div');
+                item.className = 'wheel-item';
+                item.textContent = prize;
+                wheel.appendChild(item);
+            });
+        }
+
+        function spinWheel() {
+            const totalItems = prizes.length;
+            const randomIndex = Math.floor(Math.random() * totalItems);
+            const itemHeight = 80; // Height of each prize item
+            const spins = 10; // Number of complete rotations before landing
+            const totalHeight = itemHeight * totalItems;
+            const angle = (360 * spins) + (totalHeight + (itemHeight * randomIndex));
+            
+            // Ensure that angle is always increasing for smooth rotation
+            lastRotation += angle;
+            wheel.style.transform = `translateY(-${lastRotation}px)`;
+
+            // Set a delay to show the result after the spinning animation ends
+            setTimeout(() => {
+                showModal(prizes[randomIndex]);
+                updateHistory(prizes[randomIndex]);
+                resetWheel();
+            }, 4000); // 4s for the spinning duration
+        }
+
+        function resetWheel() {
+            setTimeout(() => {
+                wheel.style.transition = 'none';
+                wheel.style.transform = 'translateY(0px)';
+                wheel.offsetHeight; // Trigger a reflow to restart transition
+                wheel.style.transition = 'transform 4s cubic-bezier(0.17, 0.67, 0.83, 0.67)';
+            }, 100);
+        }
+
+        function showModal(prize) {
+            const modal = document.getElementById('modal');
+            const modalMessage = document.getElementById('modal-message');
+            modalMessage.textContent = `Bạn đã trúng ${prize}.`;
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.style.display = 'none';
+        }
+
+        function updateHistory(prize) {
+            history.unshift(prize); // Add the new prize to the beginning of the history
+            if (history.length > 10) {
+                history.pop(); // Remove the oldest prize if more than 10
+            }
+            historyList.innerHTML = history.map(p => `<li>${p}</li>`).join('');
+        }
+
+        populateWheel();
+    </script>
+</body>
+</html>
